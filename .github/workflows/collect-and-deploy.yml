@@ -31,9 +31,18 @@ jobs:
 
       - run: pnpm --filter @mygitstats/shared run build
 
+      - name: Mint GitHub App installation tokens
+        id: app_tokens
+        if: ${{ secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != '' }}
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: pnpm exec tsx scripts/mint-app-tokens.ts
+
       - run: pnpm collect
         env:
           GITHUB_API_TOKEN: ${{ secrets.GITHUB_API_TOKEN }}
+          GITHUB_APP_TOKENS_JSON: ${{ steps.app_tokens.outputs.tokens_json }}
           COLLECTOR_VERSION: ${{ github.sha }}
 
       - name: Commit data
