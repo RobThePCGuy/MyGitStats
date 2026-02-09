@@ -1,0 +1,9 @@
+{
+  "includeForks": false,
+  "includeArchived": false,
+  "orgAllowlist": [],
+  "repoAllowlist": [],
+  "repoBlocklist": [],
+  "maxConcurrency": 5,
+  "publishPrivateRepos": []
+}

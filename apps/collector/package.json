@@ -1,0 +1,20 @@
+{
+  "name": "@mygitstats/collector",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "collect": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@mygitstats/shared": "workspace:*",
+    "octokit": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
