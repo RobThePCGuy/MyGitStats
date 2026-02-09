@@ -5,7 +5,7 @@ import type { Config, RepoMetaEntry } from "@mygitstats/shared";
  * Discover repositories that the authenticated user has push access to.
  * Applies config-based filters (forks, archived, allowlists, blocklist).
  */
-export async function discoverRepos(
+export async function discoverReposPat(
   octokit: Octokit,
   config: Config
 ): Promise<RepoMetaEntry[]> {

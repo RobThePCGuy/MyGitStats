@@ -1,9 +1,11 @@
 import type { Octokit } from "octokit";
 import { todayUTC, subtractDays } from "@mygitstats/shared";
 import type { RepoMeta, LastRun, RepoMetaEntry, ContributionDay } from "@mygitstats/shared";
-import { resolveAuth } from "./auth.js";
+import { resolveAuth, isMultiOwnerAuth } from "./auth.js";
 import { loadConfig } from "./config.js";
-import { discoverRepos } from "./discoverRepos.js";
+import { discoverReposPat } from "./discoverRepos.js";
+import { discoverReposApp, type RoutedRepoMeta } from "./discoverReposApp.js";
+import { writeRoutingFile } from "./routing.js";
 import { fetchTraffic, type TrafficResult } from "./fetchTraffic.js";
 import { fetchRepoSnapshots } from "./fetchRepoSnapshots.js";
 import { fetchContributions } from "./fetchContrib.js";
@@ -32,8 +34,21 @@ async function main(): Promise<void> {
 
   // --- Discover repos ---
   let repos: RepoMetaEntry[];
+  let routedRepos: RoutedRepoMeta[] | null = null;
   try {
-    repos = await discoverRepos(octokit, config);
+    if (isMultiOwnerAuth(auth)) {
+      routedRepos = await discoverReposApp(auth, config);
+      repos = routedRepos;
+
+      // Write routing metadata for debugging
+      const repoIdToOwner: Record<string, string> = {};
+      for (const r of routedRepos) {
+        repoIdToOwner[String(r.id)] = r.installationOwner;
+      }
+      await writeRoutingFile(repoIdToOwner);
+    } else {
+      repos = await discoverReposPat(octokit, config);
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[discover] Fatal error:", msg);
