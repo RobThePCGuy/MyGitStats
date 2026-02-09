@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
-import { fetchIndex } from "../lib/api.js";
-import type { DashboardIndex } from "../lib/types.js";
+import { fetchIndex, fetchContributions } from "../lib/api.js";
+import type { DashboardIndex, ContributionsData } from "../lib/types.js";
 import { SummaryCard } from "../components/SummaryCard.js";
 import { Loading } from "../components/Loading.js";
 
 export function Overview() {
   const [data, setData] = useState<DashboardIndex | null>(null);
+  const [contrib, setContrib] = useState<ContributionsData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchIndex()
       .then(setData)
       .catch((err) => setError(err.message));
+    fetchContributions()
+      .then(setContrib)
+      .catch(() => setContrib({ days: [] }));
   }, []);
 
   if (error) return <div className="error">{error}</div>;
@@ -19,6 +23,11 @@ export function Overview() {
 
   const { totals, repos } = data;
   const sorted = [...repos].sort((a, b) => b.stars - a.stars);
+
+  const hasContributions = contrib && contrib.days.length > 0;
+  const totalContributions = hasContributions
+    ? contrib.days.reduce((sum, d) => sum + d.count, 0)
+    : 0;
 
   return (
     <div>
@@ -32,6 +41,19 @@ export function Overview() {
         <SummaryCard label="Clones This Week" value={totals.clones} />
       </div>
 
+      <h2 className="section-heading">Contributions</h2>
+      {hasContributions ? (
+        <p style={{ color: "var(--color-text-secondary)" }}>
+          {totalContributions.toLocaleString()} contributions over the last{" "}
+          {contrib.days.length} days
+        </p>
+      ) : (
+        <div className="empty-state">
+          Contributions data not available. This feature requires PAT auth mode.
+        </div>
+      )}
+
+      <h2 className="section-heading">Repositories</h2>
       {sorted.length === 0 ? (
         <div className="empty-state">No repositories found.</div>
       ) : (

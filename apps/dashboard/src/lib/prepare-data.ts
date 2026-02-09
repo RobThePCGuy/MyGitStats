@@ -112,7 +112,20 @@ function main(): void {
   const rawConfig = fs.existsSync(configPath) ? readJSON(configPath) : {};
   const config = ConfigSchema.parse(rawConfig);
 
-  // -- 2. Read repo metadata --
+  // -- 2. Read repo metadata (allowlist: only repos.json from data/meta/) --
+  // Collector-internal files like routing.json must never be published.
+  const ALLOWED_META_FILES = new Set(["repos.json", "last-run.json"]);
+  const metaDir = path.join(DATA_DIR, "meta");
+  if (fs.existsSync(metaDir)) {
+    for (const entry of fs.readdirSync(metaDir)) {
+      if (entry.endsWith(".json") && !ALLOWED_META_FILES.has(entry)) {
+        console.warn(
+          `prepare-data: ignoring internal meta file data/meta/${entry} (not in publish allowlist)`
+        );
+      }
+    }
+  }
+
   const metaPath = path.join(DATA_DIR, "meta", "repos.json");
   let repoMeta: RepoMetaEntry[] = [];
   if (fs.existsSync(metaPath)) {

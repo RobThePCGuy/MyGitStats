@@ -10,6 +10,7 @@ export const ConfigSchema = z.object({
   repoBlocklist: z.array(z.string()).default([]),
   maxConcurrency: z.number().int().min(1).max(20).default(5),
   publishPrivateRepos: z.array(z.string()).default([]),
+  appOwners: z.array(z.string()).default([]),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
