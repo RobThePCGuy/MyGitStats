@@ -64,6 +64,27 @@ async function main(): Promise<void> {
 
   const todayStr = todayUTC();
 
+  // --- Build per-repo Octokit resolver ---
+  // In app mode, each repo routes through its owner's installation token.
+  // In PAT mode, everything uses the single octokit.
+  const ownerMap = new Map<number, string>();
+  if (routedRepos) {
+    for (const r of routedRepos) {
+      ownerMap.set(r.id, r.installationOwner);
+    }
+  }
+
+  function octokitForRepo(repoId: number): Octokit {
+    if (isMultiOwnerAuth(auth)) {
+      const owner = ownerMap.get(repoId);
+      if (!owner) {
+        throw new Error(`[routing] No installationOwner for repo id=${repoId} in app mode`);
+      }
+      return auth.octokitForOwner(owner);
+    }
+    return octokit;
+  }
+
   // --- Fetch traffic (concurrent) ---
   console.log(`[traffic] Fetching traffic for ${repos.length} repos (concurrency: ${config.maxConcurrency})`);
   const trafficByRepo = new Map<number, TrafficResult>();
@@ -71,7 +92,8 @@ async function main(): Promise<void> {
 
   await mapWithConcurrency(repos, config.maxConcurrency, async (repo) => {
     try {
-      const result = await fetchTraffic(octokit, repo);
+      const repoOctokit = octokitForRepo(repo.id);
+      const result = await fetchTraffic(repoOctokit, repo);
       if (result) {
         trafficByRepo.set(repo.id, result);
         trafficCollected++;
@@ -88,7 +110,33 @@ async function main(): Promise<void> {
   // --- Fetch snapshots (batched GraphQL) ---
   let snapshots = new Map<number, import("@mygitstats/shared").Snapshot>();
   try {
-    snapshots = await fetchRepoSnapshots(octokit, repos);
+    if (isMultiOwnerAuth(auth)) {
+      // Group repos by owner, batch within each group
+      const byOwner = new Map<string, { id: number; fullName: string }[]>();
+      for (const repo of repos) {
+        const owner = ownerMap.get(repo.id);
+        if (!owner) {
+          console.error(`[snapshots] No installationOwner for repo id=${repo.id}, skipping`);
+          continue;
+        }
+        let group = byOwner.get(owner);
+        if (!group) {
+          group = [];
+          byOwner.set(owner, group);
+        }
+        group.push({ id: repo.id, fullName: repo.fullName });
+      }
+
+      for (const [owner, group] of byOwner) {
+        const ownerOctokit = auth.octokitForOwner(owner);
+        const ownerSnapshots = await fetchRepoSnapshots(ownerOctokit, group);
+        for (const [id, snapshot] of ownerSnapshots) {
+          snapshots.set(id, snapshot);
+        }
+      }
+    } else {
+      snapshots = await fetchRepoSnapshots(octokit, repos);
+    }
     console.log(`[snapshots] Got snapshots for ${snapshots.size}/${repos.length} repos`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
