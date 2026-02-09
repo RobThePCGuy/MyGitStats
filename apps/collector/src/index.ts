@@ -1,6 +1,7 @@
+import type { Octokit } from "octokit";
 import { todayUTC, subtractDays } from "@mygitstats/shared";
-import type { RepoMeta, LastRun, RepoMetaEntry } from "@mygitstats/shared";
-import { ClassicPatProvider } from "./auth.js";
+import type { RepoMeta, LastRun, RepoMetaEntry, ContributionDay } from "@mygitstats/shared";
+import { resolveAuth } from "./auth.js";
 import { loadConfig } from "./config.js";
 import { discoverRepos } from "./discoverRepos.js";
 import { fetchTraffic, type TrafficResult } from "./fetchTraffic.js";
@@ -23,10 +24,11 @@ async function main(): Promise<void> {
   // --- Load config ---
   const config = loadConfig();
 
-  // --- Create Octokit ---
-  const auth = new ClassicPatProvider();
-  const octokit = auth.createOctokit();
-  console.log(`[auth] Token type: ${auth.tokenType()}`);
+  // --- Resolve auth (auto-detect PAT vs GitHub App) ---
+  const auth = resolveAuth();
+  const octokit = auth.createOctokit() as Octokit;
+  const authMode = auth.tokenType() === "classic-pat" ? "pat" as const : "app" as const;
+  console.log(`[auth] Mode: ${authMode} (${auth.tokenType()})`);
 
   // --- Discover repos ---
   let repos: RepoMetaEntry[];
@@ -41,7 +43,7 @@ async function main(): Promise<void> {
 
   if (repos.length === 0) {
     console.warn("[main] No repos discovered - writing meta files and exiting");
-    await writeMetaFiles(repos, startedAt, 0, errors);
+    await writeMetaFiles(repos, startedAt, 0, errors, authMode);
     return;
   }
 
@@ -79,9 +81,14 @@ async function main(): Promise<void> {
     errors.push(`snapshots: ${msg}`);
   }
 
-  // --- Fetch contributions ---
-  const contribFrom = subtractDays(todayStr, 30);
-  const contributions = await fetchContributions(octokit, contribFrom, todayStr);
+  // --- Fetch contributions (PAT only) ---
+  let contributions: ContributionDay[] = [];
+  if (authMode === "pat") {
+    const contribFrom = subtractDays(todayStr, 30);
+    contributions = await fetchContributions(octokit, contribFrom, todayStr);
+  } else {
+    console.log("[contrib] Skipped - contributions require PAT auth mode");
+  }
 
   // --- Normalize and write daily/window files ---
   try {
@@ -105,7 +112,7 @@ async function main(): Promise<void> {
     ? new Set([...trafficByRepo.keys(), ...snapshots.keys()]).size
     : 0;
 
-  await writeMetaFiles(repos, startedAt, reposCollected, errors);
+  await writeMetaFiles(repos, startedAt, reposCollected, errors, authMode);
 
   console.log("=== Collection complete ===");
   if (errors.length > 0) {
@@ -117,7 +124,8 @@ async function writeMetaFiles(
   repos: RepoMetaEntry[],
   startedAt: string,
   reposCollected: number,
-  errors: string[]
+  errors: string[],
+  authMode: "pat" | "app",
 ): Promise<void> {
   const base = dataDir();
 
@@ -136,6 +144,7 @@ async function writeMetaFiles(
     startedAt,
     finishedAt: new Date().toISOString(),
     collectorVersion,
+    authMode,
     reposDiscovered: repos.length,
     reposCollected,
     errors,

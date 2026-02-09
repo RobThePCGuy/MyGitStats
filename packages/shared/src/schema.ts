@@ -142,6 +142,7 @@ export const LastRunSchema = z.object({
   startedAt: z.string(),
   finishedAt: z.string(),
   collectorVersion: z.string(),
+  authMode: z.enum(["pat", "app"]).optional(),
   reposDiscovered: z.number().int().min(0),
   reposCollected: z.number().int().min(0),
   errors: z.array(z.string()),
