@@ -9,7 +9,7 @@ The simplest setup uses a classic Personal Access Token.
 1. **Fork or use this repo as a template**
 2. **Create a classic PAT** at <https://github.com/settings/tokens> with the `repo` and `read:org` scopes
 3. **Add the secret** in your fork: Settings > Secrets and variables > Actions > New repository secret
-   - Name: `GITHUB_API_TOKEN`
+   - Name: `GH_PAT`
    - Value: your PAT
 4. **Enable GitHub Pages**: Settings > Pages > Source: GitHub Actions
 5. **Trigger the workflow**: Actions > "Collect and Deploy" > Run workflow
@@ -44,7 +44,7 @@ Both auth modes can coexist. If `APP_ID` and `APP_PRIVATE_KEY` secrets are set a
 After following one of the Quick Start guides above:
 
 - [ ] Repo created (forked or from template)
-- [ ] Auth secrets added (`GITHUB_API_TOKEN` for PAT, or `APP_ID` + `APP_PRIVATE_KEY` for App)
+- [ ] Auth secrets added (`GH_PAT` for PAT, or `APP_ID` + `APP_PRIVATE_KEY` for App)
 - [ ] `mygitstats.config.json` updated (add `appOwners` if using App mode)
 - [ ] GitHub Pages enabled (Settings > Pages > Source: GitHub Actions)
 - [ ] Run `workflow_dispatch` once from the Actions tab to kick off the first collection

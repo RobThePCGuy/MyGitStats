@@ -14,7 +14,8 @@
 
 ### Changed
 
-- PAT mode (`GITHUB_API_TOKEN`) remains fully supported and is the default when App secrets are not configured.
+- PAT secret renamed from `GITHUB_API_TOKEN` to `GH_PAT` -- GitHub Actions reserves the `GITHUB_` prefix for secret names.
+- PAT mode remains fully supported and is the default when App secrets are not configured.
 - `routing.json` (App mode repo-to-owner mapping) is written to `data/meta/` but explicitly blocked from dashboard publication.
 
 ### Notes

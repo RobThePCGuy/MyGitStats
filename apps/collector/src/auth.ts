@@ -61,7 +61,7 @@ export class ClassicPatProvider implements AuthProvider {
     if (!token) {
       throw new Error(
         "GITHUB_API_TOKEN environment variable is required. " +
-          "Create a classic PAT at https://github.com/settings/tokens"
+          "Add a GH_PAT secret with a classic PAT from https://github.com/settings/tokens"
       );
     }
     this.token = token;
@@ -173,7 +173,7 @@ export function resolveAuth(): AuthProvider {
 
   throw new Error(
     "No authentication configured. Set one of:\n" +
-      "  - GITHUB_API_TOKEN (classic PAT)\n" +
-      "  - GITHUB_APP_TOKENS_JSON (GitHub App installation tokens)"
+      "  - GH_PAT secret (classic PAT)\n" +
+      "  - APP_ID + APP_PRIVATE_KEY secrets (GitHub App)"
   );
 }

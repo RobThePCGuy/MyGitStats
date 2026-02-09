@@ -34,7 +34,7 @@ jobs:
       - name: Validate auth configuration
         run: |
           APP_SECRETS="${{ secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != '' }}"
-          PAT_SECRET="${{ secrets.GITHUB_API_TOKEN != '' }}"
+          PAT_SECRET="${{ secrets.GH_PAT != '' }}"
           if [ "$APP_SECRETS" = "true" ]; then
             OWNERS=$(node -e "const c=JSON.parse(require('fs').readFileSync('mygitstats.config.json','utf8')); console.log((c.appOwners||[]).filter(Boolean).length)")
             if [ "$OWNERS" = "0" ]; then
@@ -45,7 +45,7 @@ jobs:
           elif [ "$PAT_SECRET" = "true" ]; then
             echo "Auth mode: Classic PAT"
           else
-            echo "::error::No authentication configured. Set GITHUB_API_TOKEN (PAT) or APP_ID + APP_PRIVATE_KEY (App) in repository secrets."
+            echo "::error::No authentication configured. Set GH_PAT (PAT) or APP_ID + APP_PRIVATE_KEY (App) in repository secrets."
             exit 1
           fi
 
@@ -59,7 +59,7 @@ jobs:
 
       - run: pnpm collect
         env:
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_API_TOKEN }}
+          GITHUB_API_TOKEN: ${{ secrets.GH_PAT }}
           GITHUB_APP_TOKENS_JSON: ${{ steps.app_tokens.outputs.tokens_json }}
           COLLECTOR_VERSION: ${{ github.sha }}
 
