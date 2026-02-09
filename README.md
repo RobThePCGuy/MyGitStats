@@ -4,6 +4,10 @@ Your GitHub stats, on your terms. MyGitStats is a self-hosted analytics dashboar
 
 No third-party services. No tracking. Your data never leaves your GitHub account.
 
+<!-- TODO: Add a screenshot of the dashboard here once you have one.
+![Dashboard screenshot](docs/screenshot.png)
+-->
+
 ---
 
 ## How to Use This Template
@@ -14,7 +18,7 @@ No third-party services. No tracking. Your data never leaves your GitHub account
 
 > **GitHub Pages and private repos:** GitHub Pages is free for public repos on all plans. If you want your repo to be private, you need **GitHub Pro**, **Team**, or **Enterprise** -- otherwise the dashboard deploy step will fail. If you are on the free plan, make your repo public.
 
-> **Important:** This template ships with empty `data/` directories. Your data will be collected and committed automatically by the workflow after you complete setup.
+> **First run:** This template ships with empty `data/` directories and the dashboard will be blank until your first workflow run completes. After setup, trigger the workflow manually -- your dashboard will be live within about a minute. From that point on, data is collected automatically every day at 06:00 UTC.
 
 ---
 
@@ -68,7 +72,7 @@ Go to [github.com/settings/apps/new](https://github.com/settings/apps/new) and f
 | App name | Anything (e.g. `mygitstats-<your-username>`) |
 | Homepage URL | Your repo URL |
 | Webhook | Uncheck "Active" |
-| Permissions | Repository metadata: **Read**, Administration: **Read** |
+| Permissions | Repository metadata: **Read**, Administration: **Read**, Issues: **Read**, Pull requests: **Read** |
 | Install scope | "Only on this account" (or "Any account" for cross-org) |
 
 ### Step 2: Install the app
