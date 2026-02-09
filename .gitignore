@@ -1,6 +1,12 @@
 node_modules/
 dist/
 *.tsbuildinfo
+apps/dashboard/public/data/
+
+# Secrets -- never commit these
 .env
 .env.*
-apps/dashboard/public/data/
+*.pem
+*.key
+*.p12
+*.pfx

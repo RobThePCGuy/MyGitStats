@@ -1,130 +1,230 @@
 # MyGitStats
 
-A self-hosted GitHub analytics dashboard. MyGitStats collects traffic data (views, clones, referrers), star/fork counts, and contribution history for your repositories using GitHub Actions, stores everything as JSON in your own repo, and builds a static dashboard you can host on GitHub Pages. Your data stays under your control -- no third-party services required.
+Your GitHub stats, on your terms. MyGitStats is a self-hosted analytics dashboard that tracks traffic (views, clones, referrers), stars, forks, and contributions across all your repositories. It runs as a GitHub Actions workflow, stores data as JSON files in your repo, and publishes a static dashboard to GitHub Pages.
 
-## Quick Start (PAT Mode)
+No third-party services. No tracking. Your data never leaves your GitHub account.
 
-The simplest setup uses a classic Personal Access Token.
+---
 
-1. **Fork or use this repo as a template**
-2. **Create a classic PAT** at <https://github.com/settings/tokens> with the `repo` and `read:org` scopes
-3. **Add the secret** in your fork: Settings > Secrets and variables > Actions > New repository secret
-   - Name: `GH_PAT`
-   - Value: your PAT
-4. **Enable GitHub Pages**: Settings > Pages > Source: GitHub Actions
-5. **Trigger the workflow**: Actions > "Collect and Deploy" > Run workflow
+## How to Use This Template
 
-The workflow runs daily at 06:00 UTC. After the first run, your dashboard will be live at `https://<username>.github.io/<repo>/`.
+1. Click **"Use this template"** (green button, top right) to create your own copy.
+2. Choose a name for your new repo and set it to **Private** (recommended) or Public.
+3. Follow **one** of the two setup guides below.
 
-## Quick Start (GitHub App Mode)
+> **Important:** This template ships with empty `data/` directories. Your data will be collected and committed automatically by the workflow after you complete setup.
 
-GitHub App mode supports collecting data across multiple accounts/orgs and avoids the broad `repo` scope of a PAT.
+---
 
-1. **Create a GitHub App** at <https://github.com/settings/apps/new>
-   - Homepage URL: your repo URL
-   - Permissions: Repository metadata (read), Repository administration (read)
-   - Webhook: uncheck "Active" (not needed)
-   - Where can this app be installed: "Only on this account" (or "Any account" for cross-org)
-2. **Install the app** on your account and/or any orgs you want to collect data from
-3. **Add secrets** in your repo:
-   - `APP_ID` -- the App ID from your app's settings page
-   - `APP_PRIVATE_KEY` -- generate and download a private key from the app settings, paste the full PEM contents
-4. **Update `mygitstats.config.json`** -- add every GitHub account/org login where the app is installed:
-   ```json
-   {
-     "appOwners": ["your-username", "your-org"]
-   }
-   ```
-5. **Enable GitHub Pages** and **trigger the workflow** (same as PAT mode above)
+## Setup Option A: Personal Access Token (Simplest)
 
-Both auth modes can coexist. If `APP_ID` and `APP_PRIVATE_KEY` secrets are set and `appOwners` is non-empty, App mode is used. Otherwise it falls back to the PAT.
+A classic PAT is the fastest way to get started. It covers all features including contribution history.
 
-## First Run Checklist
+### Step 1: Create a PAT
 
-After following one of the Quick Start guides above:
+Go to [github.com/settings/tokens](https://github.com/settings/tokens) and create a **classic** token with these scopes:
 
-- [ ] Repo created (forked or from template)
-- [ ] Auth secrets added (`GH_PAT` for PAT, or `APP_ID` + `APP_PRIVATE_KEY` for App)
-- [ ] `mygitstats.config.json` updated (add `appOwners` if using App mode)
-- [ ] GitHub Pages enabled (Settings > Pages > Source: GitHub Actions)
-- [ ] Run `workflow_dispatch` once from the Actions tab to kick off the first collection
+- `repo` -- required for traffic data on private repos
+- `read:org` -- required to discover repos in your organizations
 
-After the workflow completes, `data/` will contain your first snapshot and the dashboard will deploy to Pages. Subsequent runs happen automatically every day at 06:00 UTC.
+### Step 2: Add the secret to your repo
 
-## Support Matrix
+In your new repo, go to **Settings > Secrets and variables > Actions > New repository secret**:
 
-| Feature | PAT Mode | App Mode |
+| Secret name | Value |
+|---|---|
+| `GH_PAT` | The token you just created |
+
+> **Your token is stored as an encrypted GitHub Actions secret.** It is never written to files, never logged, and never included in the published dashboard. Only the GitHub Actions runner can read it, and only during workflow execution.
+
+### Step 3: Enable GitHub Pages
+
+Go to **Settings > Pages** and set **Source** to **GitHub Actions**.
+
+### Step 4: Run the workflow
+
+Go to **Actions > "Collect and Deploy" > Run workflow**. After it finishes (about 1 minute), your dashboard will be live at:
+
+```
+https://<your-username>.github.io/<your-repo-name>/
+```
+
+The workflow runs automatically every day at 06:00 UTC from that point on.
+
+---
+
+## Setup Option B: GitHub App (Multi-Org, Narrower Permissions)
+
+A GitHub App avoids the broad `repo` scope of a PAT and lets you collect data from multiple GitHub accounts or organizations.
+
+### Step 1: Create a GitHub App
+
+Go to [github.com/settings/apps/new](https://github.com/settings/apps/new) and fill in:
+
+| Setting | Value |
+|---|---|
+| App name | Anything (e.g. `mygitstats-<your-username>`) |
+| Homepage URL | Your repo URL |
+| Webhook | Uncheck "Active" |
+| Permissions | Repository metadata: **Read**, Administration: **Read** |
+| Install scope | "Only on this account" (or "Any account" for cross-org) |
+
+### Step 2: Install the app
+
+After creating the app, click **Install App** in the sidebar. Install it on your personal account and on any organizations you want to collect data from.
+
+### Step 3: Add secrets to your repo
+
+From your app's settings page, note the **App ID** and generate a **private key** (downloads a `.pem` file).
+
+In your repo, go to **Settings > Secrets and variables > Actions** and add:
+
+| Secret name | Value |
+|---|---|
+| `APP_ID` | The numeric App ID from your app's settings |
+| `APP_PRIVATE_KEY` | The full contents of the `.pem` file |
+
+> **After pasting the private key into the secret, delete the `.pem` file from your computer.** The key only needs to live in GitHub's encrypted secret storage. Never commit `.pem` files to any repository -- this repo's `.gitignore` blocks them, but it is best to remove the file entirely.
+
+### Step 4: Configure appOwners
+
+Edit `mygitstats.config.json` in your repo and list every GitHub account/org where you installed the app:
+
+```json
+{
+  "appOwners": ["your-username", "your-org"]
+}
+```
+
+Commit and push this change.
+
+### Step 5: Enable Pages and run the workflow
+
+Same as PAT mode: **Settings > Pages > Source: GitHub Actions**, then **Actions > "Collect and Deploy" > Run workflow**.
+
+> **Note:** If you set `APP_ID` and `APP_PRIVATE_KEY` but forget to add entries to `appOwners`, the workflow will fail immediately with a clear error message telling you what to fix.
+
+---
+
+## What Each Mode Supports
+
+| Feature | PAT | App |
 |---|---|---|
 | Traffic (views, clones) | Yes | Yes |
 | Snapshots (stars, forks) | Yes | Yes |
-| Contributions (commit heatmap) | Yes | No -- requires a user-scoped token |
-| Referrers & popular paths | Yes | Yes |
+| Contributions (commit heatmap) | Yes | No* |
+| Referrers and popular paths | Yes | Yes |
 | Private repo collection | Yes | Yes |
-| Private repo on dashboard | Opt-in via `publishPrivateRepos` | Opt-in via `publishPrivateRepos` |
-| Multi-org collection | No -- single token | Yes -- one installation per org |
+| Private repo stats on dashboard | Opt-in | Opt-in |
+| Multi-org collection | No | Yes |
 
-## Configuration Reference
+*Contributions require a user-scoped token. This is a GitHub API limitation, not a MyGitStats limitation.
 
-All configuration lives in `mygitstats.config.json` at the project root.
+If both PAT and App secrets are configured, App mode takes priority.
 
-| Field | Type | Default | Description |
+---
+
+## Configuration
+
+All settings live in `mygitstats.config.json` at the root of your repo.
+
+| Field | Type | Default | What it does |
 |---|---|---|---|
-| `includeForks` | `boolean` | `false` | Include forked repositories in collection |
-| `includeArchived` | `boolean` | `false` | Include archived repositories |
-| `orgAllowlist` | `string[]` | `[]` | Only collect repos owned by these orgs/users (empty = all) |
-| `repoAllowlist` | `string[]` | `[]` | Only collect these specific repos by `owner/name` (empty = all) |
-| `repoBlocklist` | `string[]` | `[]` | Never collect these repos by `owner/name` |
-| `maxConcurrency` | `number` | `5` | Max parallel API calls during collection (1-20) |
-| `publishPrivateRepos` | `string[]` | `[]` | Private repos whose stats should appear on the public dashboard |
-| `appOwners` | `string[]` | `[]` | GitHub account/org logins where the App is installed (App mode only) |
+| `includeForks` | boolean | `false` | Collect stats for forked repos |
+| `includeArchived` | boolean | `false` | Collect stats for archived repos |
+| `orgAllowlist` | string[] | `[]` | Only collect from these orgs/users (empty means all) |
+| `repoAllowlist` | string[] | `[]` | Only collect these specific `owner/repo` names (empty means all) |
+| `repoBlocklist` | string[] | `[]` | Never collect these `owner/repo` names |
+| `maxConcurrency` | number | `5` | Parallel API calls during collection (1-20) |
+| `publishPrivateRepos` | string[] | `[]` | Private repos to include on the public dashboard |
+| `appOwners` | string[] | `[]` | GitHub accounts/orgs where your App is installed |
+
+---
 
 ## How It Works
 
-1. **Collect** -- A GitHub Actions workflow (`collect-and-deploy.yml`) runs daily. The collector fetches traffic stats, star/fork counts, contribution history, and referrer data via the GitHub API, then writes the results as dated JSON files under `data/`.
-2. **Commit** -- The workflow commits any new or updated data files back to the repo.
-3. **Build** -- The dashboard app reads from `data/`, transforms it into a set of optimized JSON files, and builds a static React site with Vite.
-4. **Deploy** -- The built site is uploaded to GitHub Pages.
+```
+  Schedule (daily 06:00 UTC) or manual trigger
+                    |
+                    v
+          +------------------+
+          |  1. Collect data |  GitHub Actions calls the GitHub API
+          |     via API      |  using your PAT or App token
+          +------------------+
+                    |
+                    v
+          +------------------+
+          |  2. Commit JSON  |  Results saved to data/ and pushed
+          |     to data/     |  back to your repo
+          +------------------+
+                    |
+                    v
+          +------------------+
+          |  3. Build static |  React + Vite dashboard reads data/
+          |     dashboard    |  and produces optimized HTML/JS/CSS
+          +------------------+
+                    |
+                    v
+          +------------------+
+          |  4. Deploy to    |  Static site uploaded to GitHub Pages
+          |     GitHub Pages |
+          +------------------+
+```
+
+No servers to maintain. No databases. Just JSON files and a static site.
+
+---
+
+## Keeping Your Data Safe
+
+This section explains what happens with your tokens and data. Read this before setting up.
+
+**Your secrets are never exposed:**
+- `GH_PAT`, `APP_ID`, and `APP_PRIVATE_KEY` are stored as [GitHub Actions encrypted secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions). They are injected as environment variables at runtime and automatically masked in logs.
+- The workflow never writes tokens to files or includes them in commits.
+- The dashboard build pipeline explicitly blocks internal files (like `routing.json`) from the published output.
+
+**Your private repos are protected by default:**
+- Stats for private repos are collected (so you don't lose data), but they are **excluded from the published dashboard** unless you explicitly add them to `publishPrivateRepos` in the config.
+- If your dashboard repo is public, anyone can see the published stats. Only add repos to `publishPrivateRepos` if you are comfortable with that.
+
+**Files that `.gitignore` blocks:**
+- `*.pem`, `*.key`, `*.p12`, `*.pfx` -- private key files
+- `.env`, `.env.*` -- environment variable files
+- `apps/dashboard/public/data/` -- build output (regenerated on every deploy)
+
+**What to do if you accidentally commit a secret:**
+1. Rotate the token or key immediately (revoke the old one, create a new one).
+2. Update the GitHub Actions secret with the new value.
+3. Treat the old value as compromised regardless of whether you force-push to remove it -- GitHub may have cached it.
+
+---
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
+| Problem | Likely cause | Fix |
 |---|---|---|
-| 403 on traffic endpoints | PAT missing `repo` scope, or App missing administration read permission | Re-create the PAT with `repo` + `read:org`, or update App permissions |
-| No contributions in App mode | Contribution data requires a user-scoped token | Contributions are only collected in PAT mode; this is a GitHub API limitation |
-| Empty dashboard after first run | The `data/` directory has no JSON files yet | Trigger the workflow manually and wait for it to complete |
-| Rate limiting (403/429) | Too many repos or too-frequent runs | Lower `maxConcurrency`, or add repos to `repoBlocklist` |
-| `routing.json` published | Should never happen | `prepare-data` has an allowlist that blocks internal meta files from the dashboard build |
+| 403 on traffic endpoints | PAT missing `repo` scope, or App missing Administration read | Re-create the PAT with `repo` + `read:org`, or update App permissions in settings |
+| No contributions in App mode | GitHub API limitation | Contributions only work with PAT mode; switch to PAT or accept the gap |
+| Empty dashboard | No data collected yet | Trigger the workflow manually and wait for it to finish |
+| Rate limiting (403/429) | Too many repos or API calls | Lower `maxConcurrency` in config, or add large repos to `repoBlocklist` |
+| Workflow fails: "appOwners is empty" | App secrets set but config not updated | Add your GitHub username/orgs to `appOwners` in `mygitstats.config.json` |
+| Workflow fails: "No installation found" | App not installed on the listed account/org | Go to your App's settings page and install it on the missing account |
 
-## Security Notes
-
-- **PAT scope**: A classic PAT with `repo` scope has full read/write access to all your repositories. Keep the token secret and rotate it periodically.
-- **Private repos**: By default, private repo stats are excluded from the published dashboard. Only repos explicitly listed in `publishPrivateRepos` will appear.
-- **No secrets in published data**: The dashboard build pipeline never copies tokens, keys, or `routing.json` into the published output.
-- **GitHub Pages**: The dashboard is a static site with no server-side code. All data is pre-built JSON.
+---
 
 ## Development
 
+For contributors or anyone who wants to run things locally:
+
 ```bash
-# Install dependencies
-pnpm install
-
-# Build all packages
-pnpm build
-
-# Type-check all packages
-pnpm typecheck
-
-# Run tests
-pnpm test
-
-# Start dashboard dev server
-pnpm dev
-
-# Run the collector locally (requires auth env vars)
-pnpm collect
-
-# Validate data files
-pnpm verify-data
+pnpm install        # Install dependencies
+pnpm build          # Build all packages
+pnpm typecheck      # Type-check all packages
+pnpm test           # Run test suite
+pnpm dev            # Start dashboard dev server (hot reload)
+pnpm collect        # Run collector locally (needs GH_PAT env var)
+pnpm verify-data    # Validate data/ files against schemas
 ```
 
 ### Project Structure
@@ -132,10 +232,10 @@ pnpm verify-data
 ```
 mygitstats/
   apps/
-    collector/    -- GitHub API data collection
+    collector/    -- Fetches data from GitHub API
     dashboard/    -- React + Vite static dashboard
   packages/
-    shared/       -- Zod schemas and shared types
-  scripts/        -- Standalone scripts (token minting, data verification)
-  data/           -- Collected JSON data (committed by CI)
+    shared/       -- Zod schemas and TypeScript types
+  scripts/        -- Token minting, data verification
+  data/           -- Collected JSON (committed by CI)
 ```
