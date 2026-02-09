@@ -9,8 +9,10 @@ No third-party services. No tracking. Your data never leaves your GitHub account
 ## How to Use This Template
 
 1. Click **"Use this template"** (green button, top right) to create your own copy.
-2. Choose a name for your new repo and set it to **Private** (recommended) or Public.
+2. Choose a name for your new repo and set it to **Private** or **Public**.
 3. Follow **one** of the two setup guides below.
+
+> **GitHub Pages and private repos:** GitHub Pages is free for public repos on all plans. If you want your repo to be private, you need **GitHub Pro**, **Team**, or **Enterprise** -- otherwise the dashboard deploy step will fail. If you are on the free plan, make your repo public.
 
 > **Important:** This template ships with empty `data/` directories. Your data will be collected and committed automatically by the workflow after you complete setup.
 
