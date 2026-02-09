@@ -62,9 +62,7 @@ export async function discoverReposApp(
       const existing = seen.get(raw.id);
       if (existing) {
         // De-duplicate: prefer stronger permissions (admin > push > first)
-        const shouldReplace =
-          (!existing.hasAdmin && hasAdmin) ||
-          (!existing.hasAdmin && !existing.hasPush && hasPush);
+        const shouldReplace = shouldReplaceEntry(existing, { hasAdmin, hasPush });
 
         if (shouldReplace) {
           console.log(
@@ -106,6 +104,20 @@ export async function discoverReposApp(
 
   console.log(`[discover] ${filtered.length} repos after filtering (from ${all.length} total)`);
   return filtered;
+}
+
+/**
+ * Decide whether a new entry should replace an existing one during dedup.
+ * Exported for testing.
+ */
+export function shouldReplaceEntry(
+  existing: { hasAdmin: boolean; hasPush: boolean },
+  incoming: { hasAdmin: boolean; hasPush: boolean },
+): boolean {
+  return (
+    (!existing.hasAdmin && incoming.hasAdmin) ||
+    (!existing.hasAdmin && !existing.hasPush && incoming.hasPush)
+  );
 }
 
 async function listInstallationRepos(octokit: Octokit, owner: string): Promise<InstallationRepo[]> {

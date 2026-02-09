@@ -6,14 +6,19 @@
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
     "collect": "pnpm --filter @mygitstats/collector run collect",
+    "pretest": "pnpm --filter @mygitstats/shared run build",
+    "test": "vitest run",
     "verify-data": "tsx scripts/verify-data.ts",
     "dev": "pnpm --filter @mygitstats/dashboard run dev"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "devDependencies": {
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }

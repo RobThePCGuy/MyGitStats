@@ -32,6 +32,8 @@ import type {
   ReferrersData,
 } from "./types.js";
 
+import { ALLOWED_META_FILES, isKnownMetaFile } from "./prepare-data-lib.js";
+
 // ---------------------------------------------------------------------------
 // Path helpers
 // ---------------------------------------------------------------------------
@@ -114,16 +116,25 @@ function main(): void {
 
   // -- 2. Read repo metadata (allowlist: only repos.json from data/meta/) --
   // Collector-internal files like routing.json must never be published.
-  const ALLOWED_META_FILES = new Set(["repos.json", "last-run.json"]);
+  // Unknown meta files cause a hard build failure to prevent accidental publication.
   const metaDir = path.join(DATA_DIR, "meta");
+  const unknownMetaFiles: string[] = [];
   if (fs.existsSync(metaDir)) {
     for (const entry of fs.readdirSync(metaDir)) {
-      if (entry.endsWith(".json") && !ALLOWED_META_FILES.has(entry)) {
-        console.warn(
-          `prepare-data: ignoring internal meta file data/meta/${entry} (not in publish allowlist)`
-        );
+      if (!entry.endsWith(".json")) continue;
+      if (!isKnownMetaFile(entry)) {
+        unknownMetaFiles.push(entry);
+      } else if (!ALLOWED_META_FILES.has(entry)) {
+        console.log(`prepare-data: skipping internal meta file data/meta/${entry}`);
       }
     }
+  }
+  if (unknownMetaFiles.length > 0) {
+    throw new Error(
+      `prepare-data: unknown meta file(s) in data/meta/: ${unknownMetaFiles.join(", ")}. ` +
+        `To publish, add to ALLOWED_META_FILES in prepare-data-lib.ts. ` +
+        `Otherwise, remove the file(s) or add them to .gitignore.`
+    );
   }
 
   const metaPath = path.join(DATA_DIR, "meta", "repos.json");

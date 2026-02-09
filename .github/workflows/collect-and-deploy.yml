@@ -31,6 +31,24 @@ jobs:
 
       - run: pnpm --filter @mygitstats/shared run build
 
+      - name: Validate auth configuration
+        run: |
+          APP_SECRETS="${{ secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != '' }}"
+          PAT_SECRET="${{ secrets.GITHUB_API_TOKEN != '' }}"
+          if [ "$APP_SECRETS" = "true" ]; then
+            OWNERS=$(node -e "const c=JSON.parse(require('fs').readFileSync('mygitstats.config.json','utf8')); console.log((c.appOwners||[]).filter(Boolean).length)")
+            if [ "$OWNERS" = "0" ]; then
+              echo "::error::APP_ID and APP_PRIVATE_KEY secrets are set, but appOwners in mygitstats.config.json is empty. Add the GitHub account/org logins where your App is installed, or remove the App secrets to use PAT mode."
+              exit 1
+            fi
+            echo "Auth mode: GitHub App ($OWNERS owner(s))"
+          elif [ "$PAT_SECRET" = "true" ]; then
+            echo "Auth mode: Classic PAT"
+          else
+            echo "::error::No authentication configured. Set GITHUB_API_TOKEN (PAT) or APP_ID + APP_PRIVATE_KEY (App) in repository secrets."
+            exit 1
+          fi
+
       - name: Mint GitHub App installation tokens
         id: app_tokens
         if: ${{ secrets.APP_ID != '' && secrets.APP_PRIVATE_KEY != '' }}
