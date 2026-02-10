@@ -36,8 +36,9 @@ async function listInstallations(jwt: string): Promise<Installation[]> {
   while (url) {
     const res = await ghFetch(url, jwt);
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`GET /app/installations failed: ${res.status} ${res.statusText}\n${body}`);
+      throw new Error(
+        `GET /app/installations failed: ${res.status} ${res.statusText}. Check App permissions and installation scope.`,
+      );
     }
     const page = (await res.json()) as Installation[];
     out.push(...page);
@@ -54,9 +55,8 @@ async function mintInstallationToken(jwt: string, installationId: number): Promi
   const res = await ghFetch(url, jwt, { method: "POST", body: "{}" });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
     throw new Error(
-      `POST /app/installations/${installationId}/access_tokens failed: ${res.status} ${res.statusText}\n${body}`
+      `POST /app/installations/${installationId}/access_tokens failed: ${res.status} ${res.statusText}. Check App permissions for that installation.`
     );
   }
 
@@ -72,7 +72,7 @@ function readAppOwnersFromConfig(): string[] {
   const owners = Array.isArray(parsed.appOwners) ? parsed.appOwners : [];
   const clean = owners
     .filter((x): x is string => typeof x === "string")
-    .map((s) => s.trim())
+    .map((s) => s.trim().toLowerCase())
     .filter((s) => s.length > 0);
 
   return clean;
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
 
   const byLogin = new Map<string, Installation>();
   for (const inst of installations) {
-    byLogin.set(inst.account.login, inst);
+    byLogin.set(inst.account.login.toLowerCase(), inst);
   }
 
   const tokensByOwner: Record<string, string> = {};
