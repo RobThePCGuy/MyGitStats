@@ -189,6 +189,7 @@ This section explains what happens with your tokens and data. Read this before s
 - `GH_PAT`, `APP_ID`, and `APP_PRIVATE_KEY` are stored as [GitHub Actions encrypted secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions). They are injected as environment variables at runtime and automatically masked in logs.
 - The workflow never writes tokens to files or includes them in commits.
 - The dashboard build pipeline explicitly blocks internal files (like `routing.json`) from the published output.
+- A built-in **Security Scan** workflow runs [gitleaks](https://github.com/gitleaks/gitleaks) on pushes and pull requests to catch accidental secret commits early.
 
 **Your private repos are protected by default:**
 - Stats for private repos are collected (so you don't lose data), but they are **excluded from the published dashboard** unless you explicitly add them to `publishPrivateRepos` in the config.
