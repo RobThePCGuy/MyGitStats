@@ -28,12 +28,17 @@ A classic PAT is the fastest way to get started. It covers all features includin
 
 ### Step 1: Create a PAT
 
-Go to [github.com/settings/tokens](https://github.com/settings/tokens) and create a **classic** token with these scopes:
+Go to [github.com/settings/tokens](https://github.com/settings/tokens) and create a **classic** token.
 
-- `read:org` -- required to discover repos in your organizations
-- `repo` -- only needed if you want to collect stats from **private** repos (it is not required for public-only collection)
+Choose scopes based on what you want to collect:
 
-> **Choose the least access you need.** If you only care about public repositories, skip `repo` scope.
+| What you want | Required scope(s) |
+|---|---|
+| Public repos only (personal account) | `public_repo` |
+| Public repos in organizations where your membership is private or restricted | `public_repo` + `read:org` |
+| Any private repos | `repo` (+ `read:org` for org discovery) |
+
+> **Choose the least access you need.** For public-only collection, start with `public_repo` and add `read:org` only if org repos are missing.
 >
 > **Privacy reminder:** private repo stats are hidden by default, but if you add repos to `publishPrivateRepos`, their metrics become visible on your published dashboard.
 
@@ -215,7 +220,7 @@ This section explains what happens with your tokens and data. Read this before s
 
 | Problem | Likely cause | Fix |
 |---|---|---|
-| 403 on traffic endpoints | PAT missing `repo` scope for private repos, or App missing Administration read | If collecting private repos, re-create the PAT with `repo` + `read:org`; for public-only collection keep `read:org` only. Or update App permissions in settings |
+| 403 on traffic endpoints | PAT/App token lacks required repo permission, or account lacks push/write on the repo | PAT mode: use `public_repo` for public-only or `repo` for private repos; add `read:org` if org discovery is needed. App mode: ensure **Administration: Read** is granted and app is installed on that repo |
 | No contributions in App mode | GitHub API limitation | Contributions only work with PAT mode; switch to PAT or accept the gap |
 | Empty dashboard | No data collected yet | Trigger the workflow manually and wait for it to finish |
 | Rate limiting (403/429) | Too many repos or API calls | Lower `maxConcurrency` in config, or add large repos to `repoBlocklist` |
