@@ -34,9 +34,9 @@ Choose scopes based on what you want to collect:
 
 | What you want | Required scope(s) |
 |---|---|
-| Public repos only (personal account) | `public_repo` |
-| Public repos in organizations where your membership is private or restricted | `public_repo` + `read:org` |
-| Any private repos | `repo` (+ `read:org` for org discovery) |
+| Public repos | `public_repo` |
+| Public repos & organizations | `public_repo` + `read:org` |
+| Private repos | `repo` |
 
 > **Choose the least access you need.** For public-only collection, start with `public_repo` and add `read:org` only if org repos are missing.
 >
