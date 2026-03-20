@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@mygitstats/shared": "workspace:*",
-    "octokit": "^4.1.0"
+    "octokit": "^5.0.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
