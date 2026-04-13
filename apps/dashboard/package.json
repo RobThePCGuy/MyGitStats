@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@mygitstats/shared": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "recharts": "^2.15.0"
   },
   "devDependencies": {
